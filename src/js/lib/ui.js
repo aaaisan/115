@@ -3,8 +3,8 @@ import Store from './store'
 
 class UI {
   constructor () {
-    this.version = '0.3.6'
-    this.updateDate = '2019/12/13'
+    this.version = '0.3.8'
+    this.updateDate = '2020/12/16'
     Store.on('updateView', (configData) => {
       this.updateSetting(configData)
       this.updateMenu(configData)
@@ -191,6 +191,14 @@ class UI {
             </div><!-- /.setting-menu-row -->
             <div class="setting-menu-row">
               <div class="setting-menu-name">
+                <label class="setting-menu-label">小文件优先</label>
+              </div>
+              <div class="setting-menu-value">
+                <input type="checkbox" class="setting-menu-checkbox small-s">
+              </div>
+            </div><!-- /.setting-menu-row -->
+            <div class="setting-menu-row">
+              <div class="setting-menu-name">
                 <label class="setting-menu-label">强制SSL下载</label>
               </div>
               <div class="setting-menu-value">
@@ -247,7 +255,7 @@ class UI {
             <div class="setting-menu-copyright">
               <div class="setting-menu-item">
                 <label class="setting-menu-label">&copy; Copyright</label>
-                <a class="setting-menu-link" href="https://github.com/acgotaku/BaiduExporter" target="_blank">雪月秋水</a>
+                <a class="setting-menu-link" href="https://github.com/acgotaku/115" target="_blank">雪月秋水</a>
               </div>
               <div class="setting-menu-item">
                 <label class="setting-menu-label">Version: ${this.version}</label>
@@ -315,7 +323,7 @@ class UI {
   }
 
   updateSetting (configData) {
-    const { rpcList, configSync, sha1Check, ssl, interval, downloadPath, userAgent, browserUserAgent, referer, headers } = configData
+    const { rpcList, configSync, sha1Check, ssl, small, interval, downloadPath, userAgent, browserUserAgent, referer, headers } = configData
     // reset dom
     document.querySelectorAll('.rpc-s').forEach((rpc, index) => {
       if (index !== 0) {
@@ -343,6 +351,7 @@ class UI {
     document.querySelector('.configSync-s').checked = configSync
     document.querySelector('.sha1Check-s').checked = sha1Check
     document.querySelector('.ssl-s').checked = ssl
+    document.querySelector('.small-s').checked = small
     document.querySelector('.interval-s').value = interval
     document.querySelector('.downloadPath-s').value = downloadPath
     document.querySelector('.userAgent-s').value = userAgent
@@ -366,6 +375,7 @@ class UI {
     const configSync = document.querySelector('.configSync-s').checked
     const sha1Check = document.querySelector('.sha1Check-s').checked
     const ssl = document.querySelector('.ssl-s').checked
+    const small = document.querySelector('.small-s').checked
     const interval = document.querySelector('.interval-s').value
     const downloadPath = document.querySelector('.downloadPath-s').value
     const userAgent = document.querySelector('.userAgent-s').value
@@ -378,6 +388,7 @@ class UI {
       configSync,
       sha1Check,
       ssl,
+      small,
       interval,
       downloadPath,
       userAgent,

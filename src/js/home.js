@@ -1,6 +1,7 @@
 import Core from './lib/core'
 import UI from './lib/ui'
 import Downloader from './lib/downloader'
+import Secret from './lib/secret'
 
 class Home extends Downloader {
   constructor () {
@@ -27,7 +28,7 @@ class Home extends Downloader {
   initialize () {
     this.context = document.querySelector('iframe[rel="wangpan"]').contentDocument
     UI.init()
-    UI.addMenu(this.context.querySelector('#js_upload_btn'), 'beforebegin')
+    UI.addMenu(this.context.querySelector('#js_fake_path'), 'beforebegin')
     this.context.querySelector('.right-tvf').style.display = 'block'
     this.addMenuButtonEventListener()
     UI.addContextMenuRPCSectionWithCallback(() => {
@@ -124,20 +125,37 @@ class Home extends Downloader {
   }
 
   getFile (file) {
+    const now = Date.now()
+    const timestamp = Math.floor(now / 1000)
+    const { data, key } = Secret.encode(JSON.stringify({
+      pickcode: file
+    }), timestamp)
     const options = {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
       credentials: 'include',
-      method: 'GET'
+      method: 'POST',
+      body: `data=${encodeURIComponent(data)}`
     }
     return new Promise((resolve) => {
       Core.sendToBackground('fetch', {
-        url: `${location.protocol}//webapi.115.com/files/download?pickcode=${file}`,
+        url: `https://proapi.115.com/app/chrome/downurl?t=${timestamp}`,
         options
-      }, (data) => {
-        const path = data.file_url.match(/.*115.com(\/.*\/)/)[1]
-        Core.requestCookies([{ path }]).then((cookies) => {
-          data.cookies = cookies
-          resolve(data)
-        })
+      }, (json) => {
+        if (json.state) {
+          const result = JSON.parse(Secret.decode(json.data, key))
+          const data = Object.values(result).pop()
+          data.pickcode = data.pick_code
+          data.file_url = data.url.url
+          const path = data.file_url.match(/.*115.com(\/.*\/)/)[1]
+          Core.requestCookies([{ path }]).then((cookies) => {
+            data.cookies = cookies
+            resolve(data)
+          })
+        } else {
+          resolve(file)
+        }
       })
     })
   }
@@ -147,17 +165,26 @@ class Home extends Downloader {
     return new Promise((resolve) => {
       Promise.all(list).then((items) => {
         items.forEach((item) => {
-          this.fileDownloadInfo.push({
-            name: files[item.pickcode].path + item.file_name,
-            link: item.file_url,
-            sha1: files[item.pickcode].sha1,
-            cookies: item.cookies,
-            pickcode: item.pickcode
-          })
-          resolve()
+          if (this.isObject(item)) {
+            this.fileDownloadInfo.push({
+              name: files[item.pickcode].path + item.file_name,
+              link: item.file_url,
+              size: item.file_size,
+              sha1: files[item.pickcode].sha1,
+              cookies: item.cookies,
+              pickcode: item.pickcode
+            })
+          } else {
+            console.log(files[item])
+          }
         })
+        resolve()
       })
     })
+  }
+
+  isObject (obj) {
+    return obj !== null && typeof obj === 'object'
   }
 }
 
